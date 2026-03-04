@@ -11,10 +11,11 @@ import java.util.UUID;
 @Document(collection = "users")
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 public class User {
     @Id
+    @Builder.Default
     private String id = UUID.randomUUID().toString();
 
     @NotBlank
@@ -30,5 +31,6 @@ public class User {
     @NotBlank
     private String role;
 
+    @Builder.Default
     private Instant createdAt = Instant.now();
 }

@@ -34,10 +34,32 @@ public class UserService {
     }
 
     public User updateUser(User user) {
+        // Check if password is being updated and encrypt it
+        Optional<User> existingUser = userRepository.findById(user.getId());
+        if (existingUser.isPresent()) {
+            String newPassword = user.getPasswordHash();
+            String existingPassword = existingUser.get().getPasswordHash();
+            
+            // If password is different and not already encrypted, encrypt it
+            if (newPassword != null && !newPassword.equals(existingPassword)) {
+                // Check if it's already encrypted (BCrypt hashes start with $2a$ or $2b$)
+                if (!newPassword.startsWith("$2a$") && !newPassword.startsWith("$2b$")) {
+                    user.setPasswordHash(passwordEncoder.encode(newPassword));
+                }
+            }
+        }
         return userRepository.save(user);
     }
 
     public void deleteUser(String id) {
         userRepository.deleteById(id);
+    }
+
+    public Optional<User> login(String email, String password) {
+        Optional<User> user = userRepository.findByEmail(email);
+        if (user.isPresent() && passwordEncoder.matches(password, user.get().getPasswordHash())) {
+            return user;
+        }
+        return Optional.empty();
     }
 }

@@ -1,5 +1,7 @@
 package com.ctse.user_service.controller;
 
+import com.ctse.user_service.dto.LoginRequest;
+import com.ctse.user_service.dto.LoginResponse;
 import com.ctse.user_service.model.User;
 import com.ctse.user_service.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +23,22 @@ public class UserController {
         return ResponseEntity.ok(created);
     }
 
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
+        Optional<User> user = userService.login(loginRequest.getEmail(), loginRequest.getPassword());
+        if (user.isPresent()) {
+            User loggedInUser = user.get();
+            LoginResponse response = new LoginResponse(
+                "Login successful",
+                loggedInUser.getId(),
+                loggedInUser.getEmail(),
+                loggedInUser.getRole()
+            );
+            return ResponseEntity.ok(response);
+        }
+        return ResponseEntity.status(401).body("Invalid email or password");
+    }
+
     @GetMapping("/users")
     public ResponseEntity<List<User>> getAllUsers() {
         return ResponseEntity.ok(userService.getAllUsers());
@@ -29,6 +47,12 @@ public class UserController {
     @GetMapping("/users/{id}")
     public ResponseEntity<User> getUserById(@PathVariable String id) {
         Optional<User> user = userService.findById(id);
+        return user.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/profile")
+    public ResponseEntity<User> getUserProfile(@RequestParam String email) {
+        Optional<User> user = userService.findByEmail(email);
         return user.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
 
