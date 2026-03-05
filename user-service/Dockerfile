@@ -1,17 +1,20 @@
+# Build stage
+FROM maven:3.9.6-eclipse-temurin-17-alpine AS build
+WORKDIR /app
+COPY pom.xml .
+COPY user-service user-service
+COPY api-gateway api-gateway
+COPY booking-service booking-service
+COPY notification-service notification-service
+COPY appointment-service appointment-service
+
+RUN mvn clean package -pl user-service -am -DskipTests
+
+# Runtime stage
 FROM eclipse-temurin:17-jdk-alpine
-
-# Create a non-root user
 RUN addgroup -S spring && adduser -S spring -G spring
-
 VOLUME /tmp
-
-# Copy jar
-COPY target/*.jar app.jar
-
-# Change ownership
+COPY --from=build /app/user-service/target/*.jar app.jar
 RUN chown spring:spring app.jar
-
-# Switch to non-root user
 USER spring
-
 ENTRYPOINT ["java","-jar","/app.jar"]
