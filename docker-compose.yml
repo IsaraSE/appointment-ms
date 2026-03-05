@@ -1,8 +1,22 @@
 services:
+  mongodb:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    networks:
+      - appointment-network
+
   api-gateway:
-    build: ./api-gateway
+    build:
+      context: .
+      dockerfile: api-gateway/Dockerfile
     ports:
       - "8080:8080"
+    environment:
+      - USER_SERVICE_URL=http://user-service:8081
+      - BOOKING_SERVICE_URL=http://booking-service:8082
+      - NOTIFICATION_SERVICE_URL=http://notification-service:8083
+      - APPOINTMENT_SERVICE_URL=http://appointment-service:8084
     networks:
       - appointment-network
     depends_on:
@@ -12,28 +26,44 @@ services:
       - appointment-service
 
   user-service:
-    build: ./user-service
+    build:
+      context: .
+      dockerfile: user-service/Dockerfile
     ports:
       - "8081:8081"
+    environment:
+      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/userdb
     networks:
       - appointment-network
+    depends_on:
+      - mongodb
 
   booking-service:
-    build: ./booking-service
+    build:
+      context: .
+      dockerfile: booking-service/Dockerfile
     ports:
       - "8082:8082"
+    environment:
+      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/bookingdb
     networks:
       - appointment-network
+    depends_on:
+      - mongodb
 
   notification-service:
-    build: ./notification-service
+    build:
+      context: .
+      dockerfile: notification-service/Dockerfile
     ports:
       - "8083:8083"
     networks:
       - appointment-network
 
   appointment-service:
-    build: ./appointment-service
+    build:
+      context: .
+      dockerfile: appointment-service/Dockerfile
     ports:
       - "8084:8084"
     networks:
