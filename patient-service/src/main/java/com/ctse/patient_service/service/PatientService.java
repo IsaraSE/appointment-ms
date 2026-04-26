@@ -57,7 +57,7 @@ public class PatientService {
     public List<UserDto> getAllUsers() {
         return userRepository.findAll().stream()
                 .map(this::convertToDto)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public UserDto updateUser(UserDto userDto) {

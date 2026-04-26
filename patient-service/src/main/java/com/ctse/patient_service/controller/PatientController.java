@@ -45,7 +45,6 @@ public class PatientController {
         @ApiResponse(responseCode = "400", description = "Invalid input data", content = @Content)
     })
     public ResponseEntity<UserDto> registerUser( @RequestBody UserDto userDto) {
-        log.info("Registering user: age={}, contact={}", userDto.getAge(), userDto.getContactNumber());
         UserDto created = patientService.registerUser(userDto);
         return ResponseEntity.ok(created);
     }
