@@ -21,10 +21,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@1d96c772d19495a3b5c517cd2bc0cb401ea0529f # v4.1.1
 
     - name: Set up JDK 17
-      uses: actions/setup-java@v4
+      uses: actions/setup-java@99b8673ff64fbf99d8d325f52d9a5bdedb8483e9 # v4.2.1
       with:
         java-version: '17'
         distribution: 'temurin'
@@ -34,25 +34,34 @@ jobs:
       run: mvn clean package -DskipTests -pl appointment-service -am
 
     - name: Log in to Azure Container Registry
-      uses: docker/login-action@v3
+      uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
       with:
         registry: ${{ secrets.REGISTRY_USERNAME }}.azurecr.io
         username: ${{ secrets.REGISTRY_USERNAME }}
         password: ${{ secrets.REGISTRY_PASSWORD }}
 
     - name: Build and Push Docker Image
+      env:
+        REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
+        GH_SHA: ${{ github.sha }}
       run: |
-        docker build -t ${{ secrets.REGISTRY_USERNAME }}.azurecr.io/appointment-service:${{ github.sha }} -f appointment-service/Dockerfile .
-        docker push ${{ secrets.REGISTRY_USERNAME }}.azurecr.io/appointment-service:${{ github.sha }}
+        docker build -t $REGISTRY_USERNAME.azurecr.io/appointment-service:$GH_SHA -f appointment-service/Dockerfile .
+        docker push $REGISTRY_USERNAME.azurecr.io/appointment-service:$GH_SHA
 
     - name: Azure Login
-      uses: azure/login@v1
+      uses: azure/login@a65d910e8af852a8061c627c456678983e180302 # v1.4.6
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
     - name: Deploy to Azure Container Apps
-      uses: azure/CLI@v1
+      uses: azure/CLI@a93c94291de23018e69ee8ed2b123d53ee8f6f02 # v1.0.9
+      env:
+        REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
+        REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
+        MONGO_URI: ${{ secrets.MONGO_URI_APPOINTMENT }}
+        RABBITMQ_ADDR: ${{ secrets.RABBITMQ_ADDRESSES }}
+        GH_SHA: ${{ github.sha }}
       with:
         inlineScript: |
           az config set extension.use_dynamic_install=yes_without_prompt
-          az containerapp up --name appointment-service --resource-group AppointmentApp-RG --environment AppointmentEnv --image ${{ secrets.REGISTRY_USERNAME }}.azurecr.io/appointment-service:${{ github.sha }} --registry-server ${{ secrets.REGISTRY_USERNAME }}.azurecr.io --registry-username ${{ secrets.REGISTRY_USERNAME }} --registry-password ${{ secrets.REGISTRY_PASSWORD }} --ingress external --target-port 8082 --env-vars SPRING_DATA_MONGODB_URI=mongodb+srv://kavindugunasena_db_user:cYZo979kS6JGFMwP@cluster0.q457xsz.mongodb.net/appointmentdb?appName=Cluster0 SPRING_RABBITMQ_ADDRESSES=amqps://leiemjjf:NTpL9iR8jOA13odrMIXY2SR5CUzzMmbs@gerbil.rmq.cloudamqp.com/leiemjjf
+          az containerapp up --name appointment-service --resource-group AppointmentApp-RG --environment AppointmentEnv --image $REGISTRY_USERNAME.azurecr.io/appointment-service:$GH_SHA --registry-server $REGISTRY_USERNAME.azurecr.io --registry-username $REGISTRY_USERNAME --registry-password $REGISTRY_PASSWORD --ingress external --target-port 8082 --env-vars "SPRING_DATA_MONGODB_URI=$MONGO_URI" "SPRING_RABBITMQ_ADDRESSES=$RABBITMQ_ADDR"
