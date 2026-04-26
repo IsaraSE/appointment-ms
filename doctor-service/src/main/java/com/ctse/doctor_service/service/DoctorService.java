@@ -10,12 +10,12 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class DoctorService {
 
     private static final Logger log = LoggerFactory.getLogger(DoctorService.class);
+    private static final String DOCTOR_NOT_FOUND_MSG = "Doctor not found with id: ";
 
     private final DoctorRepository doctorRepository;
     private final RabbitTemplate rabbitTemplate;
@@ -41,18 +41,18 @@ public class DoctorService {
     public List<DoctorDto> getAllDoctors() {
         return doctorRepository.findAll().stream()
                 .map(this::convertToDto)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public DoctorDto getDoctor(String doctorId) {
         Doctor doctor = doctorRepository.findById(doctorId)
-                .orElseThrow(() -> new IllegalArgumentException("Doctor not found with id: " + doctorId));
+                .orElseThrow(() -> new IllegalArgumentException(DOCTOR_NOT_FOUND_MSG + doctorId));
         return convertToDto(doctor);
     }
 
     public DoctorDto updateDoctor(String doctorId, DoctorDto updatedDoctorDto) {
         Doctor existing = doctorRepository.findById(doctorId)
-                .orElseThrow(() -> new IllegalArgumentException("Doctor not found with id: " + doctorId));
+                .orElseThrow(() -> new IllegalArgumentException(DOCTOR_NOT_FOUND_MSG + doctorId));
         existing.setName(updatedDoctorDto.getName());
         existing.setSpecialization(updatedDoctorDto.getSpecialization());
         return convertToDto(doctorRepository.save(existing));
@@ -60,7 +60,7 @@ public class DoctorService {
 
     public void deleteDoctor(String doctorId) {
         Doctor existing = doctorRepository.findById(doctorId)
-                .orElseThrow(() -> new IllegalArgumentException("Doctor not found with id: " + doctorId));
+                .orElseThrow(() -> new IllegalArgumentException(DOCTOR_NOT_FOUND_MSG + doctorId));
         doctorRepository.delete(existing);
     }
 

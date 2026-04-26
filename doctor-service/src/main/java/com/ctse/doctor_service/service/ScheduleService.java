@@ -33,13 +33,13 @@ public class ScheduleService {
     public List<ScheduleDto> getAllSchedules() {
         return scheduleRepository.findAll().stream()
                 .map(this::convertToDto)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public List<ScheduleDto> getAvailableSlots() {
         return scheduleRepository.findByStatus(SlotStatus.AVAILABLE).stream()
                 .map(this::convertToDto)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public ScheduleDto updateSchedule(String slotId, ScheduleDto scheduleDetails) {
