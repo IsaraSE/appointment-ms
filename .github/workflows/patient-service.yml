@@ -12,6 +12,10 @@ on:
       - 'patient-service/**'
       - 'pom.xml'
 
+concurrency:
+  group: deploy-patient-service
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
