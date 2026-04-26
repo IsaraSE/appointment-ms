@@ -12,6 +12,10 @@ on:
       - 'notification-service/**'
       - 'pom.xml'
 
+concurrency:
+  group: deploy-notification-service
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
