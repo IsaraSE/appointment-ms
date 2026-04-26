@@ -49,7 +49,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             try {
                 email = jwtUtil.extractUsername(jwt);
             } catch (JwtException | IllegalArgumentException e) {
-                logger.error("Unable to extract JWT token: {}", e.getMessage());
+                logger.error("Unable to extract JWT token: " + e.getMessage(), e);
             }
         }
 
@@ -67,7 +67,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     SecurityContextHolder.getContext().setAuthentication(authenticationToken);
                 }
             } catch (JwtException | IllegalArgumentException e) {
-                logger.error("Unable to validate JWT token: {}", e.getMessage());
+                logger.error("Unable to validate JWT token: " + e.getMessage(), e);
             }
         }
 
