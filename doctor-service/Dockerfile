@@ -9,7 +9,7 @@ RUN mvn clean package -pl doctor-service -am -DskipTests
 FROM eclipse-temurin:17-jdk-alpine
 RUN addgroup -S spring && adduser -S spring -G spring
 VOLUME /tmp
-COPY --from=build /app/booking-service/target/*.jar app.jar
+COPY --from=build /app/doctor-service/target/*.jar app.jar
 RUN chown spring:spring app.jar
 USER spring
 ENTRYPOINT ["java","-jar","/app.jar"]
