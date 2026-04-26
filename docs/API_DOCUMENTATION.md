@@ -9,11 +9,11 @@ This document outlines the core responsibilities, functionalities, and API endpo
 **Functionality:** 
 Acts as the single public-facing entry point to the entire ecosystem. It intercepts all incoming HTTP client requests, queries the Eureka Server registry to locate the dynamic IP and Port of the target backend microservice, and routes the traffic seamlessly.
 * **Routing Strategy**: Requests matching `/<service-name>/**` are automatically forwarded. 
-* *Example:* `POST http://localhost:8080/user-service/api/users/login` routes securely to the hidden `user-service` without exposing its internal port.
+* *Example:* `POST http://localhost:8080/patient-service/api/users/login` routes securely to the hidden `patient-service` without exposing its internal port.
 
 ---
 
-## 2. User Service (`user-service`)
+## 2. Patient Service (`patient-service`)
 **Port:** `8081` (Internal)
 **Functionality:**  
 Responsible for identity and access management. Handles patient and admin registrations, secure login, password hashing, and JWT token issuing. It stores user profiles securely in MongoDB.
@@ -27,10 +27,10 @@ Responsible for identity and access management. Handles patient and admin regist
 
 ---
 
-## 3. Booking Service (`booking-service`)
+## 3. Appointment Service (`appointment-service`)
 **Port:** `8082` (Internal)
 **Functionality:** 
-The core engine of the system. It manages the lifecycle of appointments and available time slots. When an appointment is booked, it communicates synchronously with the User/Doctor services (via OpenFeign) to validate entities, and publishes asynchronous events to RabbitMQ for notification processing.
+The core engine of the system. It manages the lifecycle of appointments and available time slots. When an appointment is booked, it communicates synchronously with the Patient/Doctor services (via OpenFeign) to validate entities, and publishes asynchronous events to RabbitMQ for notification processing.
 
 ### API Endpoints
 **Appointments:**
@@ -91,12 +91,12 @@ The microservices operate on an Event-Driven and REST-based architecture, mainta
 
 ### Synchronous Communication (OpenFeign)
 Certain operations require immediate validation before proceeding. We use **Spring Cloud OpenFeign** for synchronous HTTP calls between internal services:
-- **Booking $\rightarrow$ User Service:** When a patient creates an appointment, the Booking Service synchronously calls the User Service (`user-service/api/users/{id}`) to verify the patient's identity exists before locking the slot.
-- **Booking $\rightarrow$ Doctor Service:** Similarly, the Booking Service synchronously calls the Doctor Service to verify the requested medical schedule actually exists and belongs to the specified doctor.
+- **Appointment $\rightarrow$ Patient Service:** When a patient creates an appointment, the Appointment Service synchronously calls the Patient Service (`patient-service/api/users/{id}`) to verify the patient's identity exists before locking the slot.
+- **Appointment $\rightarrow$ Doctor Service:** Similarly, the Appointment Service synchronously calls the Doctor Service to verify the requested medical schedule actually exists and belongs to the specified doctor.
 
 ### Asynchronous Communication (RabbitMQ Event Broker)
 To prevent blocking threads and maintain high availability, non-critical downstream actions are handled asynchronously via RabbitMQ.
-- **Event Publisher (Booking Service):** Once an appointment is confirmed and saved to MongoDB, the Booking Service publishes an event payload to the `appointment-exchange` with the routing key `appointment.booked`.
+- **Event Publisher (Appointment Service):** Once an appointment is confirmed and saved to MongoDB, the Appointment Service publishes an event payload to the `appointment-exchange` with the routing key `appointment.booked`.
 - **Event Subscriber (Notification Service):** The Notification Service continuously listens to the `appointment-notification-queue`. It instantly consumes the event, formats a user-friendly alert, and saves it to its own MongoDB database, terminating the flow without ever slowing down the user's original HTTP request.
 
 ---
@@ -105,7 +105,7 @@ To prevent blocking threads and maintain high availability, non-critical downstr
 
 ### Service Registry (`eureka-server`)
 **Port:** `8761`
-Acts as the dynamic DNS and Address Book for the microservices. Every service securely registers its dynamic container IP and Port here on startup. This allows them to find each other by logical application names (e.g., `user-service`) rather than hardcoded static IPs, enabling API Gateway routing and OpenFeign client-side load balancing.
+Acts as the dynamic DNS and Address Book for the microservices. Every service securely registers its dynamic container IP and Port here on startup. This allows them to find each other by logical application names (e.g., `patient-service`) rather than hardcoded static IPs, enabling API Gateway routing and OpenFeign client-side load balancing.
 
 ### Distributed Configuration (`config-server`)
 **Port:** `8888`
