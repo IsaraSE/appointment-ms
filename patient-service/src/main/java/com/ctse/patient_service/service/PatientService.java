@@ -7,6 +7,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import com.ctse.patient_service.dto.UserDto;
 
 @Service
 public class PatientService {
@@ -20,8 +22,15 @@ public class PatientService {
         this.rabbitTemplate = rabbitTemplate;
     }
 
-    public User registerUser(User user) {
-        user.setPasswordHash(passwordEncoder.encode(user.getPasswordHash()));
+    public UserDto registerUser(UserDto userDto) {
+        User user = new User();
+        user.setPatientName(userDto.getPatientName());
+        user.setContactNumber(userDto.getContactNumber());
+        user.setAge(userDto.getAge());
+        user.setEmail(userDto.getEmail());
+        user.setPasswordHash(passwordEncoder.encode(userDto.getPasswordHash()));
+        user.setRole(userDto.getRole());
+        
         User savedUser = userRepository.save(user);
 
         try {
@@ -30,34 +39,45 @@ public class PatientService {
             // SonarCloud Fix: System.err.println stripped to resolve Log Injection security vulnerability.
         }
 
-        return savedUser;
+        return convertToDto(savedUser);
     }
 
-    public Optional<User> findByEmail(String email) {
-        return userRepository.findByEmail(email);
+    public Optional<UserDto> findByEmail(String email) {
+        return userRepository.findByEmail(email).map(this::convertToDto);
     }
 
-    public Optional<User> findById(String id) {
-        return userRepository.findById(id);
+    public Optional<UserDto> findById(String id) {
+        return userRepository.findById(id).map(this::convertToDto);
     }
 
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
+    public List<UserDto> getAllUsers() {
+        return userRepository.findAll().stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
     }
 
-    public User updateUser(User user) {
-        // Check if password is being updated and encrypt it
-        Optional<User> existingUser = userRepository.findById(user.getId());
-        if (existingUser.isPresent()) {
-            String newPassword = user.getPasswordHash();
-            String existingPassword = existingUser.get().getPasswordHash();
+    public UserDto updateUser(UserDto userDto) {
+        Optional<User> existingUserOpt = userRepository.findById(userDto.getId());
+        
+        if (existingUserOpt.isPresent()) {
+            User existingUser = existingUserOpt.get();
+            String newPassword = userDto.getPasswordHash();
+            String existingPassword = existingUser.getPasswordHash();
             
             // If password is different and not already encrypted, encrypt it
             if (newPassword != null && !newPassword.equals(existingPassword) && !newPassword.startsWith("$2a$") && !newPassword.startsWith("$2b$")) {
-                user.setPasswordHash(passwordEncoder.encode(newPassword));
+                existingUser.setPasswordHash(passwordEncoder.encode(newPassword));
             }
+            
+            existingUser.setPatientName(userDto.getPatientName());
+            existingUser.setContactNumber(userDto.getContactNumber());
+            existingUser.setAge(userDto.getAge());
+            existingUser.setEmail(userDto.getEmail());
+            existingUser.setRole(userDto.getRole());
+            
+            return convertToDto(userRepository.save(existingUser));
         }
-        return userRepository.save(user);
+        throw new IllegalArgumentException("User not found");
     }
 
     public void deleteUser(String id) {
@@ -70,5 +90,16 @@ public class PatientService {
             return user;
         }
         return Optional.empty();
+    }
+
+    private UserDto convertToDto(User user) {
+        UserDto dto = new UserDto();
+        dto.setId(user.getId());
+        dto.setPatientName(user.getPatientName());
+        dto.setContactNumber(user.getContactNumber());
+        dto.setAge(user.getAge());
+        dto.setEmail(user.getEmail());
+        dto.setRole(user.getRole());
+        return dto;
     }
 }

@@ -47,16 +47,8 @@ public class PatientController {
     })
     public ResponseEntity<UserDto> registerUser( @RequestBody UserDto userDto) {
         log.info("Registering user: age={}, contact={}", userDto.getAge(), userDto.getContactNumber());
-        User user = new User();
-        user.setPatientName(userDto.getPatientName());
-        user.setContactNumber(userDto.getContactNumber());
-        user.setAge(userDto.getAge());
-        user.setEmail(userDto.getEmail());
-        user.setPasswordHash(userDto.getPasswordHash());
-        user.setRole(userDto.getRole());
-        
-        User created = patientService.registerUser(user);
-        return ResponseEntity.ok(convertToDto(created));
+        UserDto created = patientService.registerUser(userDto);
+        return ResponseEntity.ok(created);
     }
 
     @PostMapping("/login")
@@ -97,7 +89,7 @@ public class PatientController {
         @ApiResponse(responseCode = "403", description = "Access denied", content = @Content)
     })
     public ResponseEntity<List<UserDto>> getAllUsers() {
-        return ResponseEntity.ok(patientService.getAllUsers().stream().map(this::convertToDto).collect(Collectors.toList()));
+        return ResponseEntity.ok(patientService.getAllUsers());
     }
 
     @GetMapping("/users/{id}")
@@ -112,8 +104,7 @@ public class PatientController {
     })
     public ResponseEntity<UserDto> getUserById(
             @Parameter(description = "User ID", required = true) @PathVariable String id) {
-        Optional<User> user = patientService.findById(id);
-        return user.map(u -> ResponseEntity.ok(convertToDto(u))).orElse(ResponseEntity.notFound().build());
+        return patientService.findById(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/profile")
@@ -128,8 +119,7 @@ public class PatientController {
     })
     public ResponseEntity<UserDto> getUserProfile(
             @Parameter(description = "User email", required = true) @RequestParam String email) {
-        Optional<User> user = patientService.findByEmail(email);
-        return user.map(u -> ResponseEntity.ok(convertToDto(u))).orElse(ResponseEntity.notFound().build());
+        return patientService.findByEmail(email).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
 
     @PutMapping("/users/{id}")
@@ -145,17 +135,9 @@ public class PatientController {
     public ResponseEntity<UserDto> updateUser(
             @Parameter(description = "User ID", required = true) @PathVariable String id,
             @RequestBody UserDto userDto) {
-        User user = new User();
-        user.setId(id);
-        user.setPatientName(userDto.getPatientName());
-        user.setContactNumber(userDto.getContactNumber());
-        user.setAge(userDto.getAge());
-        user.setEmail(userDto.getEmail());
-        user.setPasswordHash(userDto.getPasswordHash());
-        user.setRole(userDto.getRole());
-        
-        User updated = patientService.updateUser(user);
-        return ResponseEntity.ok(convertToDto(updated));
+        userDto.setId(id);
+        UserDto updated = patientService.updateUser(userDto);
+        return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/users/{id}")
@@ -173,14 +155,4 @@ public class PatientController {
         return ResponseEntity.noContent().build();
     }
 
-    private UserDto convertToDto(User user) {
-        UserDto dto = new UserDto();
-        dto.setId(user.getId());
-        dto.setPatientName(user.getPatientName());
-        dto.setContactNumber(user.getContactNumber());
-        dto.setAge(user.getAge());
-        dto.setEmail(user.getEmail());
-        dto.setRole(user.getRole());
-        return dto;
-    }
 }
