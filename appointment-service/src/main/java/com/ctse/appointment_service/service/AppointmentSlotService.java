@@ -16,6 +16,8 @@ import java.util.Optional;
 @Service
 public class AppointmentSlotService {
 
+    private static final String SLOT_NOT_FOUND_MSG = "Slot not found: ";
+
     private final AppointmentSlotRepository repository;
     private final org.springframework.amqp.rabbit.core.RabbitTemplate rabbitTemplate;
 
@@ -64,7 +66,7 @@ public class AppointmentSlotService {
     /** Update slot details (Protected - Admin). */
     public AppointmentSlot update(String slotId, UpdateSlotRequest request) {
         AppointmentSlot slot = repository.findById(slotId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Slot not found: " + slotId));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, SLOT_NOT_FOUND_MSG + slotId));
         if (request != null) {
             if (request.getDoctorName() != null && !request.getDoctorName().isBlank()) {
                 slot.setDoctorName(request.getDoctorName());
@@ -85,7 +87,7 @@ public class AppointmentSlotService {
     /** Delete a slot (Protected - Admin). */
     public boolean delete(String slotId) {
         if (!repository.existsById(slotId)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Slot not found: " + slotId);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, SLOT_NOT_FOUND_MSG + slotId);
         }
         repository.deleteById(slotId);
         return true;
@@ -94,7 +96,7 @@ public class AppointmentSlotService {
     /** Mark slot as booked (Internal - Booking Service). */
     public AppointmentSlot book(String slotId) {
         AppointmentSlot slot = repository.findById(slotId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Slot not found: " + slotId));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, SLOT_NOT_FOUND_MSG + slotId));
         if (AppointmentSlot.STATUS_BOOKED.equals(slot.getStatus())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Slot is already booked");
         }
@@ -110,7 +112,7 @@ public class AppointmentSlotService {
     /** Release slot after cancellation (Internal - Booking Service). */
     public AppointmentSlot release(String slotId) {
         AppointmentSlot slot = repository.findById(slotId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Slot not found: " + slotId));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, SLOT_NOT_FOUND_MSG + slotId));
         slot.setStatus(AppointmentSlot.STATUS_AVAILABLE);
         return repository.save(slot);
     }

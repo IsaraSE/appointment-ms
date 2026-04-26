@@ -10,11 +10,11 @@ public class DoctorService {
 
     private final DoctorRepository doctorRepository;
 
-    @org.springframework.beans.factory.annotation.Autowired
-    private org.springframework.amqp.rabbit.core.RabbitTemplate rabbitTemplate;
+    private final org.springframework.amqp.rabbit.core.RabbitTemplate rabbitTemplate;
 
-    public DoctorService(DoctorRepository doctorRepository) {
+    public DoctorService(DoctorRepository doctorRepository, org.springframework.amqp.rabbit.core.RabbitTemplate rabbitTemplate) {
         this.doctorRepository = doctorRepository;
+        this.rabbitTemplate = rabbitTemplate;
     }
 
     public Doctor createDoctor(Doctor doctor) {

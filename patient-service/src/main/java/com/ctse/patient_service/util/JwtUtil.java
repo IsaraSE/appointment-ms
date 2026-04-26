@@ -16,13 +16,13 @@ import java.util.function.Function;
 public class JwtUtil {
 
     @Value("${jwt.secret:mySecretKey123456789012345678901234567890}")
-    private String SECRET_KEY;
+    private String secretKey;
 
     @Value("${jwt.expiration:86400000}") // 24 hours default
-    private Long JWT_TOKEN_VALIDITY;
+    private Long jwtTokenValidity;
 
     private SecretKey getSigningKey() {
-        return Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
+        return Keys.hmacShaKeyFor(secretKey.getBytes());
     }
 
     // Extract username (email) from token
@@ -69,7 +69,7 @@ public class JwtUtil {
                 .claims(claims)
                 .subject(subject)
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY))
+                .expiration(new Date(System.currentTimeMillis() + jwtTokenValidity))
                 .signWith(getSigningKey())
                 .compact();
     }

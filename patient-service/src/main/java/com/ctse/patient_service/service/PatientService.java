@@ -10,14 +10,15 @@ import java.util.Optional;
 
 @Service
 public class PatientService {
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
+    private final BCryptPasswordEncoder passwordEncoder;
+    private final org.springframework.amqp.rabbit.core.RabbitTemplate rabbitTemplate;
 
-    @Autowired
-    private BCryptPasswordEncoder passwordEncoder;
-
-    @Autowired
-    private org.springframework.amqp.rabbit.core.RabbitTemplate rabbitTemplate;
+    public PatientService(UserRepository userRepository, BCryptPasswordEncoder passwordEncoder, org.springframework.amqp.rabbit.core.RabbitTemplate rabbitTemplate) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.rabbitTemplate = rabbitTemplate;
+    }
 
     public User registerUser(User user) {
         user.setPasswordHash(passwordEncoder.encode(user.getPasswordHash()));

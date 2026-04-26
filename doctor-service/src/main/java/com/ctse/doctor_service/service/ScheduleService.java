@@ -30,7 +30,7 @@ public class ScheduleService {
 
     public Schedule updateSchedule(String slotId, Schedule scheduleDetails) {
         Schedule schedule = scheduleRepository.findById(slotId)
-                .orElseThrow(() -> new RuntimeException("Schedule not found with id: " + slotId));
+                .orElseThrow(() -> new IllegalArgumentException("Schedule not found with id: " + slotId));
         
         schedule.setDoctorId(scheduleDetails.getDoctorId());
         schedule.setDate(scheduleDetails.getDate());
@@ -42,16 +42,16 @@ public class ScheduleService {
 
     public void deleteSchedule(String slotId) {
         Schedule schedule = scheduleRepository.findById(slotId)
-                .orElseThrow(() -> new RuntimeException("Schedule not found with id: " + slotId));
+                .orElseThrow(() -> new IllegalArgumentException("Schedule not found with id: " + slotId));
         scheduleRepository.delete(schedule);
     }
 
     public Schedule bookSlot(String slotId) {
         Schedule schedule = scheduleRepository.findById(slotId)
-                .orElseThrow(() -> new RuntimeException("Slot not found with id: " + slotId));
+                .orElseThrow(() -> new IllegalArgumentException("Slot not found with id: " + slotId));
         
         if (schedule.getStatus() == SlotStatus.BOOKED) {
-            throw new RuntimeException("Slot is already booked");
+            throw new IllegalStateException("Slot is already booked");
         }
         
         schedule.setStatus(SlotStatus.BOOKED);
@@ -60,10 +60,10 @@ public class ScheduleService {
 
     public Schedule releaseSlot(String slotId) {
         Schedule schedule = scheduleRepository.findById(slotId)
-                .orElseThrow(() -> new RuntimeException("Slot not found with id: " + slotId));
+                .orElseThrow(() -> new IllegalArgumentException("Slot not found with id: " + slotId));
         
         if (schedule.getStatus() == SlotStatus.AVAILABLE) {
-            throw new RuntimeException("Slot is already available");
+            throw new IllegalStateException("Slot is already available");
         }
         
         schedule.setStatus(SlotStatus.AVAILABLE);
