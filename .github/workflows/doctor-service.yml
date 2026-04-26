@@ -16,10 +16,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@1d96c772d19495a3b5c517cd2bc0cb401ea0529f # v4.1.1
+    - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
     - name: Set up JDK 17
-      uses: actions/setup-java@99b8673ff64fbf99d8d325f52d9a5bdedb8483e9 # v4.2.1
+      uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4
       with:
         java-version: '17'
         distribution: 'temurin'
@@ -29,7 +29,7 @@ jobs:
       run: mvn clean package -DskipTests -pl doctor-service -am
 
     - name: Log in to Azure Container Registry
-      uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
+      uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
       with:
         registry: ${{ secrets.REGISTRY_USERNAME }}.azurecr.io
         username: ${{ secrets.REGISTRY_USERNAME }}
@@ -44,12 +44,12 @@ jobs:
         docker push $REGISTRY_USERNAME.azurecr.io/doctor-service:$GH_SHA
 
     - name: Azure Login
-      uses: azure/login@a65d910e8af852a8061c627c456678983e180302 # v1.4.6
+      uses: azure/login@33b121a1597278045654f321b0e9861297c5e9c0 # v1
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
     - name: Deploy to Azure Container Apps
-      uses: azure/CLI@a93c94291de23018e69ee8ed2b123d53ee8f6f02 # v1.0.9
+      uses: azure/CLI@0df669690ef49b481fbac281873b305464e46984 # v1
       env:
         REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
         REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
