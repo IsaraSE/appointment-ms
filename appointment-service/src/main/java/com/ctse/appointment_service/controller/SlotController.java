@@ -2,7 +2,7 @@ package com.ctse.appointment_service.controller;
 
 import com.ctse.appointment_service.dto.CreateSlotRequest;
 import com.ctse.appointment_service.dto.UpdateSlotRequest;
-import com.ctse.appointment_service.model.AppointmentSlot;
+import com.ctse.appointment_service.dto.SlotDto;
 import com.ctse.appointment_service.service.AppointmentSlotService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -31,24 +31,21 @@ public class SlotController {
     }
 
     @PostMapping
-    public ResponseEntity<AppointmentSlot> createSlot(@RequestBody CreateSlotRequest request) {
-        AppointmentSlot created = slotService.create(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    public ResponseEntity<SlotDto> createSlot(@RequestBody CreateSlotRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(slotService.create(request));
     }
 
     @GetMapping("/available")
-    public ResponseEntity<List<AppointmentSlot>> getAvailableSlots(
+    public ResponseEntity<List<SlotDto>> getAvailableSlots(
             @RequestParam(required = false) LocalDate date) {
-        List<AppointmentSlot> slots = slotService.getAvailableSlots(date);
-        return ResponseEntity.ok(slots);
+        return ResponseEntity.ok(slotService.getAvailableSlots(date));
     }
 
     @PutMapping("/{slotId}")
-    public ResponseEntity<AppointmentSlot> updateSlot(
+    public ResponseEntity<SlotDto> updateSlot(
             @PathVariable String slotId,
             @RequestBody UpdateSlotRequest request) {
-        AppointmentSlot updated = slotService.update(slotId, request);
-        return ResponseEntity.ok(updated);
+        return ResponseEntity.ok(slotService.update(slotId, request));
     }
 
     @DeleteMapping("/{slotId}")
@@ -58,14 +55,13 @@ public class SlotController {
     }
 
     @PutMapping("/{slotId}/book")
-    public ResponseEntity<AppointmentSlot> bookSlot(@PathVariable String slotId) {
-        AppointmentSlot slot = slotService.book(slotId);
-        return ResponseEntity.ok(slot);
+    public ResponseEntity<SlotDto> bookSlot(@PathVariable String slotId) {
+        return ResponseEntity.ok(slotService.book(slotId));
     }
 
     @PutMapping("/{slotId}/release")
-    public ResponseEntity<AppointmentSlot> releaseSlot(@PathVariable String slotId) {
-        AppointmentSlot slot = slotService.release(slotId);
-        return ResponseEntity.ok(slot);
+    public ResponseEntity<SlotDto> releaseSlot(@PathVariable String slotId) {
+        return ResponseEntity.ok(slotService.release(slotId));
     }
+
 }

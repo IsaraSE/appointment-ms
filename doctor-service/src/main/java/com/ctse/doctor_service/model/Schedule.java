@@ -16,7 +16,7 @@ public class Schedule {
     private LocalTime endTime;
     private SlotStatus status = SlotStatus.AVAILABLE;
 
-    public Schedule() {}
+
 
     public String getSlotId() { return slotId; }
     public void setSlotId(String slotId) { this.slotId = slotId; }

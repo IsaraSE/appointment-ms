@@ -1,6 +1,6 @@
 package com.ctse.doctor_service.controller;
 
-import com.ctse.doctor_service.model.Doctor;
+import com.ctse.doctor_service.dto.DoctorDto;
 import com.ctse.doctor_service.service.DoctorService;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,23 +17,23 @@ public class DoctorController {
     }
 
     @PostMapping
-    public Doctor createDoctor(@RequestBody Doctor doctor) {
-        return doctorService.createDoctor(doctor);
+    public DoctorDto createDoctor(@RequestBody DoctorDto doctorDto) {
+        return doctorService.createDoctor(doctorDto);
     }
 
     @GetMapping
-    public List<Doctor> getDoctors() {
+    public List<DoctorDto> getDoctors() {
         return doctorService.getAllDoctors();
     }
 
     @GetMapping("/{doctorId}")
-    public Doctor getDoctor(@PathVariable String doctorId) {
+    public DoctorDto getDoctor(@PathVariable String doctorId) {
         return doctorService.getDoctor(doctorId);
     }
 
     @PutMapping("/{doctorId}")
-    public Doctor updateDoctor(@PathVariable String doctorId, @RequestBody Doctor doctor) {
-        return doctorService.updateDoctor(doctorId, doctor);
+    public DoctorDto updateDoctor(@PathVariable String doctorId, @RequestBody DoctorDto doctorDto) {
+        return doctorService.updateDoctor(doctorId, doctorDto);
     }
 
     @DeleteMapping("/{doctorId}")

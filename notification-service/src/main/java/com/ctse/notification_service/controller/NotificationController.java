@@ -1,8 +1,7 @@
 package com.ctse.notification_service.controller;
 
-import com.ctse.notification_service.model.Notification;
-import com.ctse.notification_service.repository.NotificationRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.ctse.notification_service.dto.NotificationDto;
+import com.ctse.notification_service.service.NotificationService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,34 +11,32 @@ import java.util.List;
 @RequestMapping("/api/notifications")
 public class NotificationController {
 
-    @Autowired
-    private NotificationRepository notificationRepository;
+    private final NotificationService notificationService;
+
+    public NotificationController(NotificationService notificationService) {
+        this.notificationService = notificationService;
+    }
 
     @GetMapping("/user/{recipientId}")
-    public ResponseEntity<List<Notification>> getUserNotifications(@PathVariable String recipientId) {
-        return ResponseEntity.ok(notificationRepository.findByRecipientIdOrderByTimestampDesc(recipientId));
+    public ResponseEntity<List<NotificationDto>> getUserNotifications(@PathVariable String recipientId) {
+        return ResponseEntity.ok(notificationService.getUserNotifications(recipientId));
     }
 
     @PostMapping
-    public ResponseEntity<Notification> createNotification(@RequestBody Notification notification) {
-        notification.setTimestamp(java.time.LocalDateTime.now());
-        return ResponseEntity.ok(notificationRepository.save(notification));
+    public ResponseEntity<NotificationDto> createNotification(@RequestBody NotificationDto notificationDto) {
+        return ResponseEntity.ok(notificationService.createNotification(notificationDto));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Notification> updateNotification(@PathVariable String id, @RequestBody Notification notification) {
-        return notificationRepository.findById(id).map(existing -> {
-            existing.setTitle(notification.getTitle());
-            existing.setMessage(notification.getMessage());
-            existing.setRead(notification.isRead());
-            return ResponseEntity.ok(notificationRepository.save(existing));
-        }).orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<NotificationDto> updateNotification(@PathVariable String id, @RequestBody NotificationDto notificationDto) {
+        return notificationService.updateNotification(id, notificationDto)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteNotification(@PathVariable String id) {
-        if (notificationRepository.existsById(id)) {
-            notificationRepository.deleteById(id);
+        if (notificationService.deleteNotification(id)) {
             return ResponseEntity.noContent().build();
         }
         return ResponseEntity.notFound().build();

@@ -15,8 +15,11 @@ public class NotificationListener {
 
     private static final Logger log = LoggerFactory.getLogger(NotificationListener.class);
 
-    @Autowired
-    private NotificationRepository notificationRepository;
+    private final NotificationRepository notificationRepository;
+
+    public NotificationListener(NotificationRepository notificationRepository) {
+        this.notificationRepository = notificationRepository;
+    }
 
     @RabbitListener(queues = "appointment-notification-queue")
     public void receiveMessage(String message) {
