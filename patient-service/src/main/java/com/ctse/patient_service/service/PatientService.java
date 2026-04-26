@@ -53,11 +53,8 @@ public class PatientService {
             String existingPassword = existingUser.get().getPasswordHash();
             
             // If password is different and not already encrypted, encrypt it
-            if (newPassword != null && !newPassword.equals(existingPassword)) {
-                // Check if it's already encrypted (BCrypt hashes start with $2a$ or $2b$)
-                if (!newPassword.startsWith("$2a$") && !newPassword.startsWith("$2b$")) {
-                    user.setPasswordHash(passwordEncoder.encode(newPassword));
-                }
+            if (newPassword != null && !newPassword.equals(existingPassword) && !newPassword.startsWith("$2a$") && !newPassword.startsWith("$2b$")) {
+                user.setPasswordHash(passwordEncoder.encode(newPassword));
             }
         }
         return userRepository.save(user);

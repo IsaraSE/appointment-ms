@@ -35,7 +35,7 @@ public class DoctorService {
 
     public Doctor getDoctor(String doctorId) {
         return doctorRepository.findById(doctorId)
-                .orElseThrow(() -> new RuntimeException("Doctor not found with id: " + doctorId));
+                .orElseThrow(() -> new IllegalArgumentException("Doctor not found with id: " + doctorId));
     }
 
     public Doctor updateDoctor(String doctorId, Doctor updatedDoctor) {
