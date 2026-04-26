@@ -27,8 +27,6 @@ import java.util.stream.Collectors;
 @Tag(name = "User Management", description = "APIs for user registration, authentication, and management")
 public class PatientController {
 
-    private static final Logger log = LoggerFactory.getLogger(PatientController.class);
-
     private final PatientService patientService;
     private final JwtUtil jwtUtil;
 
