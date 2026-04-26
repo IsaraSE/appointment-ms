@@ -64,7 +64,7 @@ public class AppointmentSlotService {
         } else {
             slots = repository.findByStatus(AppointmentSlot.STATUS_AVAILABLE);
         }
-        return slots.stream().map(this::toDto).collect(Collectors.toList());
+        return slots.stream().map(this::toDto).toList();
     }
 
     /** Update slot details (Protected - Admin). */
