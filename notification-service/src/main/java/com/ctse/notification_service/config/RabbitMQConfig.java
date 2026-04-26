@@ -10,22 +10,22 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class RabbitMQConfig {
     
-    public static final String EXCHANGE_NAME = "appointment-exchange";
-    public static final String QUEUE_NAME = "appointment-notification-queue";
-    public static final String ROUTING_KEY = "appointment.booked";
+    public static final String NOTIFICATION_EXCHANGE = "appointment-exchange";
+    public static final String NOTIFICATION_QUEUE = "appointment-notification-queue";
+    public static final String NOTIF_ROUTING_KEY = "appointment.booked";
 
     @Bean
-    public DirectExchange exchange() {
-        return new DirectExchange(EXCHANGE_NAME);
+    public Queue notificationQueue() {
+        return new Queue(NOTIFICATION_QUEUE, true);
     }
 
     @Bean
-    public Queue queue() {
-        return new Queue(QUEUE_NAME, true);
+    public DirectExchange notificationExchange() {
+        return new DirectExchange(NOTIFICATION_EXCHANGE);
     }
 
     @Bean
-    public Binding binding(Queue queue, DirectExchange exchange) {
-        return BindingBuilder.bind(queue).to(exchange).with(ROUTING_KEY);
+    public Binding notificationBinding(Queue notificationQueue, DirectExchange notificationExchange) {
+        return BindingBuilder.bind(notificationQueue).to(notificationExchange).with(NOTIF_ROUTING_KEY);
     }
 }
