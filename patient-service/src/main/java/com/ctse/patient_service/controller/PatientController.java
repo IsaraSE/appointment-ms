@@ -3,7 +3,6 @@ package com.ctse.patient_service.controller;
 import com.ctse.patient_service.dto.LoginRequest;
 import com.ctse.patient_service.dto.LoginResponse;
 import com.ctse.patient_service.dto.UserDto;
-import com.ctse.patient_service.model.User;
 import com.ctse.patient_service.service.PatientService;
 import com.ctse.patient_service.util.JwtUtil;
 import org.slf4j.Logger;
@@ -59,9 +58,9 @@ public class PatientController {
         @ApiResponse(responseCode = "401", description = "Invalid credentials", content = @Content)
     })
     public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest loginRequest) {
-        Optional<User> user = patientService.login(loginRequest.getEmail(), loginRequest.getPassword());
-        if (user.isPresent()) {
-            User loggedInUser = user.get();
+        Optional<UserDto> userDto = patientService.login(loginRequest.getEmail(), loginRequest.getPassword());
+        if (userDto.isPresent()) {
+            UserDto loggedInUser = userDto.get();
             // Generate JWT token
             String token = jwtUtil.generateToken(
                 loggedInUser.getEmail(), 

@@ -2,7 +2,9 @@ package com.ctse.patient_service.service;
 
 import com.ctse.patient_service.model.User;
 import com.ctse.patient_service.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.amqp.AmqpException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.util.List;
@@ -12,6 +14,8 @@ import com.ctse.patient_service.dto.UserDto;
 
 @Service
 public class PatientService {
+
+    private static final Logger log = LoggerFactory.getLogger(PatientService.class);
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder passwordEncoder;
     private final org.springframework.amqp.rabbit.core.RabbitTemplate rabbitTemplate;
@@ -35,8 +39,8 @@ public class PatientService {
 
         try {
             rabbitTemplate.convertAndSend("appointment-exchange", "user.registered", "User Registered: " + savedUser.getEmail());
-        } catch (Exception e) {
-            // SonarCloud Fix: System.err.println stripped to resolve Log Injection security vulnerability.
+        } catch (AmqpException e) {
+            log.warn("Unable to publish user registration event to RabbitMQ: {}", e.getMessage());
         }
 
         return convertToDto(savedUser);
@@ -84,12 +88,10 @@ public class PatientService {
         userRepository.deleteById(id);
     }
 
-    public Optional<User> login(String email, String password) {
-        Optional<User> user = userRepository.findByEmail(email);
-        if (user.isPresent() && passwordEncoder.matches(password, user.get().getPasswordHash())) {
-            return user;
-        }
-        return Optional.empty();
+    public Optional<UserDto> login(String email, String password) {
+        return userRepository.findByEmail(email)
+                .filter(user -> passwordEncoder.matches(password, user.getPasswordHash()))
+                .map(this::convertToDto);
     }
 
     private UserDto convertToDto(User user) {

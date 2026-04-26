@@ -1,6 +1,7 @@
 package com.ctse.appointment_service.service;
 
 import com.ctse.appointment_service.dto.CreateSlotRequest;
+import com.ctse.appointment_service.dto.SlotDto;
 import com.ctse.appointment_service.dto.UpdateSlotRequest;
 import com.ctse.appointment_service.model.AppointmentSlot;
 import com.ctse.appointment_service.repository.AppointmentSlotRepository;
@@ -11,7 +12,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class AppointmentSlotService {
@@ -27,7 +28,7 @@ public class AppointmentSlotService {
     }
 
     /** Create a new appointment slot (Protected - Admin). */
-    public AppointmentSlot create(CreateSlotRequest request) {
+    public SlotDto create(CreateSlotRequest request) {
         if (request == null) {
             throw new IllegalArgumentException("CreateSlotRequest must not be null");
         }
@@ -52,19 +53,22 @@ public class AppointmentSlotService {
                 .status(AppointmentSlot.STATUS_AVAILABLE)
                 .createdAt(Instant.now())
                 .build();
-        return repository.save(slot);
+        return toDto(repository.save(slot));
     }
 
     /** Get all available slots, optionally filtered by date (Public). */
-    public List<AppointmentSlot> getAvailableSlots(LocalDate date) {
+    public List<SlotDto> getAvailableSlots(LocalDate date) {
+        List<AppointmentSlot> slots;
         if (date != null) {
-            return repository.findByStatusAndDate(AppointmentSlot.STATUS_AVAILABLE, date);
+            slots = repository.findByStatusAndDate(AppointmentSlot.STATUS_AVAILABLE, date);
+        } else {
+            slots = repository.findByStatus(AppointmentSlot.STATUS_AVAILABLE);
         }
-        return repository.findByStatus(AppointmentSlot.STATUS_AVAILABLE);
+        return slots.stream().map(this::toDto).collect(Collectors.toList());
     }
 
     /** Update slot details (Protected - Admin). */
-    public AppointmentSlot update(String slotId, UpdateSlotRequest request) {
+    public SlotDto update(String slotId, UpdateSlotRequest request) {
         AppointmentSlot slot = repository.findById(slotId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, SLOT_NOT_FOUND_MSG + slotId));
         if (request != null) {
@@ -81,7 +85,7 @@ public class AppointmentSlotService {
                 slot.setEndTime(request.getEndTime());
             }
         }
-        return repository.save(slot);
+        return toDto(repository.save(slot));
     }
 
     /** Delete a slot (Protected - Admin). */
@@ -94,7 +98,7 @@ public class AppointmentSlotService {
     }
 
     /** Mark slot as booked (Internal - Booking Service). */
-    public AppointmentSlot book(String slotId) {
+    public SlotDto book(String slotId) {
         AppointmentSlot slot = repository.findById(slotId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, SLOT_NOT_FOUND_MSG + slotId));
         if (AppointmentSlot.STATUS_BOOKED.equals(slot.getStatus())) {
@@ -106,19 +110,26 @@ public class AppointmentSlotService {
         // Publish event to RabbitMQ
         rabbitTemplate.convertAndSend("appointment-exchange", "appointment.booked", "Appointment Slot Booked: " + slotId);
         
-        return savedSlot;
+        return toDto(savedSlot);
     }
 
     /** Release slot after cancellation (Internal - Booking Service). */
-    public AppointmentSlot release(String slotId) {
+    public SlotDto release(String slotId) {
         AppointmentSlot slot = repository.findById(slotId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, SLOT_NOT_FOUND_MSG + slotId));
         slot.setStatus(AppointmentSlot.STATUS_AVAILABLE);
-        return repository.save(slot);
+        return toDto(repository.save(slot));
     }
 
-    /** Get a single slot by id (for internal use if needed). */
-    public Optional<AppointmentSlot> findById(String slotId) {
-        return repository.findById(slotId);
+    private SlotDto toDto(AppointmentSlot slot) {
+        return SlotDto.builder()
+                .id(slot.getId())
+                .doctorName(slot.getDoctorName())
+                .date(slot.getDate())
+                .startTime(slot.getStartTime())
+                .endTime(slot.getEndTime())
+                .status(slot.getStatus())
+                .createdAt(slot.getCreatedAt())
+                .build();
     }
 }

@@ -3,14 +3,19 @@ package com.ctse.doctor_service.service;
 import com.ctse.doctor_service.model.Doctor;
 import com.ctse.doctor_service.repository.DoctorRepository;
 import com.ctse.doctor_service.dto.DoctorDto;
-import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.amqp.AmqpException;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 public class DoctorService {
+
+    private static final Logger log = LoggerFactory.getLogger(DoctorService.class);
 
     private final DoctorRepository doctorRepository;
     private final RabbitTemplate rabbitTemplate;
@@ -26,8 +31,8 @@ public class DoctorService {
 
         try {
             rabbitTemplate.convertAndSend("appointment-exchange", "doctor.added", "Doctor Added: " + savedDoctor.getName());
-        } catch (Exception e) {
-            // SonarCloud Fix: System.err.println stripped to resolve Log Injection security vulnerability.
+        } catch (AmqpException e) {
+            log.warn("Unable to publish doctor creation event to RabbitMQ: {}", e.getMessage());
         }
 
         return convertToDto(savedDoctor);

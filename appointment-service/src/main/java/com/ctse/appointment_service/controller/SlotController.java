@@ -3,7 +3,6 @@ package com.ctse.appointment_service.controller;
 import com.ctse.appointment_service.dto.CreateSlotRequest;
 import com.ctse.appointment_service.dto.UpdateSlotRequest;
 import com.ctse.appointment_service.dto.SlotDto;
-import com.ctse.appointment_service.model.AppointmentSlot;
 import com.ctse.appointment_service.service.AppointmentSlotService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,7 +10,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Appointment slot API. Via API Gateway exposed as /appointments/slots, /appointments/slots/available, etc.
@@ -34,25 +32,20 @@ public class SlotController {
 
     @PostMapping
     public ResponseEntity<SlotDto> createSlot(@RequestBody CreateSlotRequest request) {
-        AppointmentSlot created = slotService.create(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(convertToDto(created));
+        return ResponseEntity.status(HttpStatus.CREATED).body(slotService.create(request));
     }
 
     @GetMapping("/available")
     public ResponseEntity<List<SlotDto>> getAvailableSlots(
             @RequestParam(required = false) LocalDate date) {
-        List<SlotDto> slots = slotService.getAvailableSlots(date).stream()
-                .map(this::convertToDto)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(slots);
+        return ResponseEntity.ok(slotService.getAvailableSlots(date));
     }
 
     @PutMapping("/{slotId}")
     public ResponseEntity<SlotDto> updateSlot(
             @PathVariable String slotId,
             @RequestBody UpdateSlotRequest request) {
-        AppointmentSlot updated = slotService.update(slotId, request);
-        return ResponseEntity.ok(convertToDto(updated));
+        return ResponseEntity.ok(slotService.update(slotId, request));
     }
 
     @DeleteMapping("/{slotId}")
@@ -63,25 +56,12 @@ public class SlotController {
 
     @PutMapping("/{slotId}/book")
     public ResponseEntity<SlotDto> bookSlot(@PathVariable String slotId) {
-        AppointmentSlot slot = slotService.book(slotId);
-        return ResponseEntity.ok(convertToDto(slot));
+        return ResponseEntity.ok(slotService.book(slotId));
     }
 
     @PutMapping("/{slotId}/release")
     public ResponseEntity<SlotDto> releaseSlot(@PathVariable String slotId) {
-        AppointmentSlot slot = slotService.release(slotId);
-        return ResponseEntity.ok(convertToDto(slot));
+        return ResponseEntity.ok(slotService.release(slotId));
     }
 
-    private SlotDto convertToDto(AppointmentSlot slot) {
-        return SlotDto.builder()
-                .id(slot.getId())
-                .doctorName(slot.getDoctorName())
-                .date(slot.getDate())
-                .startTime(slot.getStartTime())
-                .endTime(slot.getEndTime())
-                .status(slot.getStatus())
-                .createdAt(slot.getCreatedAt())
-                .build();
-    }
 }
