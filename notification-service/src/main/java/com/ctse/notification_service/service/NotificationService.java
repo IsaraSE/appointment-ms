@@ -23,7 +23,7 @@ public class NotificationService {
         return notificationRepository.findByRecipientIdOrderByTimestampDesc(recipientId)
                 .stream()
                 .map(this::convertToDto)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public NotificationDto createNotification(NotificationDto notificationDto) {
