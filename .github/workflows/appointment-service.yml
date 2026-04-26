@@ -12,6 +12,10 @@ on:
       - 'appointment-service/**'
       - 'pom.xml'
 
+concurrency:
+  group: deploy-appointment-service
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
