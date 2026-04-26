@@ -16,10 +16,7 @@ public class Schedule {
     private LocalTime endTime;
     private SlotStatus status = SlotStatus.AVAILABLE;
 
-    // Required by MongoDB/Spring Data
-    public Schedule() {
-        // Standard empty constructor for persistence
-    }
+
 
     public String getSlotId() { return slotId; }
     public void setSlotId(String slotId) { this.slotId = slotId; }
