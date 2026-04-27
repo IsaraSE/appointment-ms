@@ -5,7 +5,7 @@ COPY . .
 
 RUN mvn clean package -pl api-gateway -am -DskipTests
 
-# Runtime stage
+# Runtime
 FROM eclipse-temurin:17-jdk-alpine
 RUN addgroup -S spring && adduser -S spring -G spring
 VOLUME /tmp
