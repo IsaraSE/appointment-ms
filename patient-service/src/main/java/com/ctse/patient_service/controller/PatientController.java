@@ -35,6 +35,7 @@ public class PatientController {
         this.jwtUtil = jwtUtil;
     }
 
+    //register a user 
     @PostMapping("/register")
     @Operation(summary = "Register a new user", description = "Register a new user account with patient, doctor, or admin role")
     @ApiResponses(value = {
