@@ -10,27 +10,27 @@ spring:
     gateway:
       routes:
         - id: patient-service
-          uri: http://patient-service:8081
+          uri: http://patient-service
           predicates:
             - Path=/patients/**
           filters:
             - RewritePath=/patients/(?<segment>.*), /auth/$\{segment}
         - id: doctor-service
-          uri: http://doctor-service:8085
+          uri: http://doctor-service
           predicates:
             - Path=/doctors/**
         - id: doctor-service-schedules
-          uri: http://doctor-service:8085
+          uri: http://doctor-service
           predicates:
             - Path=/schedules/**
         - id: appointment-service
-          uri: http://appointment-service:8082
+          uri: http://appointment-service
           predicates:
             - Path=/appointments/**
           filters:
             - RewritePath=/appointments/(?<segment>.*), /slots/$\{segment}
         - id: notification-service
-          uri: http://notification-service:8083
+          uri: http://notification-service
           predicates:
             - Path=/notifications/**
           filters:
