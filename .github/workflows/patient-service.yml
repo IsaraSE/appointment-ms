@@ -68,8 +68,9 @@ jobs:
         MONGO_URI: ${{ secrets.MONGO_URI_PATIENT }}
         RABBITMQ_ADDR: ${{ secrets.RABBITMQ_ADDRESSES }}
         GH_SHA: ${{ github.sha }}
+        JWT_SECRET: ${{ secrets.JWT_SECRET }}
       with:
         inlineScript: |
           az config set extension.use_dynamic_install=yes_without_prompt
-          az containerapp up --name patient-service --resource-group AppointmentApp-RG --environment AppointmentEnv --image $REGISTRY_USERNAME.azurecr.io/patient-service:$GH_SHA --registry-server $REGISTRY_USERNAME.azurecr.io --registry-username $REGISTRY_USERNAME --registry-password $REGISTRY_PASSWORD --ingress external --target-port 8081 --env-vars "SPRING_DATA_MONGODB_URI=$MONGO_URI" "SPRING_RABBITMQ_ADDRESSES=$RABBITMQ_ADDR"
+          az containerapp up --name patient-service --resource-group AppointmentApp-RG --environment AppointmentEnv --image $REGISTRY_USERNAME.azurecr.io/patient-service:$GH_SHA --registry-server $REGISTRY_USERNAME.azurecr.io --registry-username $REGISTRY_USERNAME --registry-password $REGISTRY_PASSWORD --ingress external --target-port 8081 --env-vars "SPRING_DATA_MONGODB_URI=$MONGO_URI" "SPRING_RABBITMQ_ADDRESSES=$RABBITMQ_ADDR" "JWT_SECRET=$JWT_SECRET"
 
