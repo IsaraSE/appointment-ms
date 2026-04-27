@@ -1,5 +1,7 @@
 package com.ctse.appointment_service.service;
 
+import com.ctse.appointment_service.client.DoctorServiceClient;
+import com.ctse.appointment_service.client.PatientServiceClient;
 import com.ctse.appointment_service.dto.CreateSlotRequest;
 import com.ctse.appointment_service.dto.SlotDto;
 import com.ctse.appointment_service.dto.UpdateSlotRequest;
@@ -12,7 +14,6 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class AppointmentSlotService {
@@ -21,10 +22,17 @@ public class AppointmentSlotService {
 
     private final AppointmentSlotRepository repository;
     private final org.springframework.amqp.rabbit.core.RabbitTemplate rabbitTemplate;
+    private final DoctorServiceClient doctorServiceClient;
+    private final PatientServiceClient patientServiceClient;
 
-    public AppointmentSlotService(AppointmentSlotRepository repository, org.springframework.amqp.rabbit.core.RabbitTemplate rabbitTemplate) {
+    public AppointmentSlotService(AppointmentSlotRepository repository, 
+                                  org.springframework.amqp.rabbit.core.RabbitTemplate rabbitTemplate,
+                                  DoctorServiceClient doctorServiceClient,
+                                  PatientServiceClient patientServiceClient) {
         this.repository = repository;
         this.rabbitTemplate = rabbitTemplate;
+        this.doctorServiceClient = doctorServiceClient;
+        this.patientServiceClient = patientServiceClient;
     }
 
     /** Create a new appointment slot (Protected - Admin). */
@@ -32,20 +40,18 @@ public class AppointmentSlotService {
         if (request == null) {
             throw new IllegalArgumentException("CreateSlotRequest must not be null");
         }
-        if (request.getDoctorName() == null || request.getDoctorName().isBlank()) {
-            throw new IllegalArgumentException("doctorName is required");
-        }
-        if (request.getDate() == null) {
-            throw new IllegalArgumentException("date is required");
-        }
-        if (request.getStartTime() == null || request.getStartTime().isBlank()) {
-            throw new IllegalArgumentException("startTime is required");
-        }
-        if (request.getEndTime() == null || request.getEndTime().isBlank()) {
-            throw new IllegalArgumentException("endTime is required");
+        
+        // Validation using Feign Client (Synchronous Inter-service Communication)
+        if (request.getDoctorId() != null && !request.getDoctorId().isBlank()) {
+            try {
+                doctorServiceClient.getDoctorById(request.getDoctorId());
+            } catch (Exception e) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Doctor validation failed: " + request.getDoctorId());
+            }
         }
 
         AppointmentSlot slot = AppointmentSlot.builder()
+                .doctorId(request.getDoctorId())
                 .doctorName(request.getDoctorName())
                 .date(request.getDate())
                 .startTime(request.getStartTime())
@@ -72,6 +78,9 @@ public class AppointmentSlotService {
         AppointmentSlot slot = repository.findById(slotId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, SLOT_NOT_FOUND_MSG + slotId));
         if (request != null) {
+            if (request.getDoctorId() != null && !request.getDoctorId().isBlank()) {
+                slot.setDoctorId(request.getDoctorId());
+            }
             if (request.getDoctorName() != null && !request.getDoctorName().isBlank()) {
                 slot.setDoctorName(request.getDoctorName());
             }
@@ -101,16 +110,31 @@ public class AppointmentSlotService {
     public SlotDto book(String slotId) {
         AppointmentSlot slot = repository.findById(slotId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, SLOT_NOT_FOUND_MSG + slotId));
+        
         if (AppointmentSlot.STATUS_BOOKED.equals(slot.getStatus())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Slot is already booked");
         }
+
         slot.setStatus(AppointmentSlot.STATUS_BOOKED);
         AppointmentSlot savedSlot = repository.save(slot);
         
-        // Publish event to RabbitMQ
+        // Publish event to RabbitMQ (Asynchronous Inter-service Communication)
         rabbitTemplate.convertAndSend("appointment-exchange", "appointment.booked", "Appointment Slot Booked: " + slotId);
         
         return toDto(savedSlot);
+    }
+
+    /** Enhanced booking with user validation via Feign. */
+    public SlotDto confirmBooking(String slotId, String userId) {
+        // 1. Validate User exists (Sync call via Feign)
+        try {
+            patientServiceClient.getUserById(userId);
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User validation failed: " + userId);
+        }
+
+        // 2. Perform booking
+        return book(slotId);
     }
 
     /** Release slot after cancellation (Internal - Booking Service). */
@@ -124,6 +148,7 @@ public class AppointmentSlotService {
     private SlotDto toDto(AppointmentSlot slot) {
         return SlotDto.builder()
                 .id(slot.getId())
+                .doctorId(slot.getDoctorId())
                 .doctorName(slot.getDoctorName())
                 .date(slot.getDate())
                 .startTime(slot.getStartTime())

@@ -6,6 +6,7 @@ import java.time.LocalDate;
 
 @Data
 public class CreateSlotRequest {
+    private String doctorId;
     private String doctorName;
     private LocalDate date;
     private String startTime;

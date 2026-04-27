@@ -21,6 +21,7 @@ public class AppointmentSlot {
     @Id
     private String id;
 
+    private String doctorId;
     /** Consultant / doctor name */
     private String doctorName;
 

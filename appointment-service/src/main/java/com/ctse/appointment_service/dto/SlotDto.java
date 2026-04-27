@@ -13,6 +13,7 @@ import java.time.LocalDate;
 @Builder
 public class SlotDto {
     private String id;
+    private String doctorId;
     private String doctorName;
     private LocalDate date;
     private String startTime;
