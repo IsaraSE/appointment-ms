@@ -12,29 +12,29 @@ spring:
         - id: patient-service
           uri: http://patient-service
           predicates:
-            - Path=/patients/**
+            - Path=/patients, /patients/**
           filters:
-            - RewritePath=/patients/(?<segment>.*), /auth/$\{segment}
+            - RewritePath=/patients(?<segment>/?.*), /auth$\{segment}
         - id: doctor-service
           uri: http://doctor-service
           predicates:
-            - Path=/doctors/**
+            - Path=/doctors, /doctors/**
         - id: doctor-service-schedules
           uri: http://doctor-service
           predicates:
-            - Path=/schedules/**
+            - Path=/schedules, /schedules/**
         - id: appointment-service
           uri: http://appointment-service
           predicates:
-            - Path=/appointments/**
+            - Path=/appointments, /appointments/**
           filters:
-            - RewritePath=/appointments/(?<segment>.*), /slots/$\{segment}
+            - RewritePath=/appointments(?<segment>/?.*), /slots$\{segment}
         - id: notification-service
           uri: http://notification-service
           predicates:
-            - Path=/notifications/**
+            - Path=/notifications, /notifications/**
           filters:
-            - RewritePath=/notifications/(?<segment>.*), /api/notifications/$\{segment}
+            - RewritePath=/notifications(?<segment>/?.*), /api/notifications$\{segment}
 
 management:
   endpoints:
