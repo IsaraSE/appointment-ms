@@ -14,6 +14,9 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    environment: 
+      name: Production
+      url: https://api-gateway.whitesky-a1a8232a.eastus.azurecontainerapps.io
 
     steps:
     - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
